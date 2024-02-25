@@ -1,0 +1,17 @@
+/* 모달창 스타일 */
+#passwordConfirmModal {
+    position: fixed; /* 모달창을 페이지 중앙에 고정 */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 2px solid #000;
+    z-index: 100; /* 다른 요소들 위에 모달창이 위치하도록 z-index 설정 */
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 그림자 효과 */
+}
+
+/* 유효성 검증 */
+.valid {
+    border: 3px solid green;
+}

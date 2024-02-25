@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- MyBatis 매퍼 파일: CommentMapper 인터페이스와 매핑-->
+<mapper namespace="com.study.board.dao.CommentMapper">
+
+    <!-- 특정 게시글(ID 기준)에 달린 모든 댓글을 조회하는 쿼리 -->
+    <!-- resultType : 조회 결과를 매핑할 자바 객체 타입 지정 -->
+    <select id="getAllCommentsByBoardId" resultType="com.study.board.dto.CommentDTO">
+        SELECT * FROM tb_comment WHERE board_id = #{boardId}
+    </select>
+
+    <!-- 새로운 댓글을 tb_comment 테이블에 삽입하는 쿼리 -->
+    <insert id="write">
+        INSERT INTO tb_comment
+            (comment, writer, board_id)
+        values
+            (#{comment}, #{writer}, #{boardId})
+    </insert>
+
+</mapper>

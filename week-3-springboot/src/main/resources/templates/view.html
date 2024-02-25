@@ -1,0 +1,222 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <title>글 상세</title>
+    <link href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+</head>
+
+<body align="center">
+<h1>게시판 - 보기</h1>
+
+<!--  게시글 상세  -->
+<table border="1" cellpadding="0" cellspacing="0" width="700" align="center">
+    <tbody>
+    <tr>
+        <td th:text="${post.writer}" />
+        <td th:text="'등록일시 ' + ${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}" />
+        <td th:text="'수정일시 ' + ${#temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm')}" />
+    </tr>
+    <tr>
+        <td colspan="2" th:text="'[' + ${post.categoryName} + '] ' + ${post.title}" />
+        <td th:text="${post.views}" />
+    </tr>
+    <tr>
+        <td colspan="3" th:text="${post.content}" />
+    </tr>
+    <tr th:if="${not #lists.isEmpty(files)}">
+        <td colspan="3" style="text-align: left">
+            <!-- 첨부파일이 존재하는 경우 -->
+            <div th:each="file : ${files}">
+                <i class="fa-solid fa-download"></i>
+                <a th:href="@{/download(fileName=${file.savedName}, filePath=${file.savedPath}, ext=${file.ext})}" th:text="|${file.originalName}.${file.ext}|">Download</a>
+                <br/>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!--  게시글 상세 끝  -->
+
+<br><br>
+
+<!-- 댓글 처리 -->
+<form th:action="@{/comments}" method="post">
+    <input type="hidden" id="seq" name="boardId" th:value="${post.boardId}"/>
+    <input type="hidden" id="page" name="page" th:value="${condition.page}" />
+    <input type="hidden" id="category" name="category" th:value="${condition.selectedCategoryId}" />
+    <input type="hidden" id="searchKeyword" name="searchKeyword" th:value="${condition.searchKeyword}" />
+    <input type="hidden" id="startDate" name="startDate" th:value="${condition.getFromDate()}" />
+    <input type="hidden" id="endDate" name="endDate" th:value="${condition.getToDate()}" />
+
+    <table border="1" cellpadding="0" cellspacing="0" width="700" align="center">
+        <!-- 댓글 목록 -->
+        <tr th:each="comment : ${comments}">
+            <td style="text-align: left; padding-left: 5px">
+                <div style="font-weight: bold" th:text="${comment.writer}"></div>
+                <div style="color: darkgrey" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></div>
+                <div style="margin-top: 5px; margin-bottom: 5px;" th:text="${comment.comment}"></div>
+            </td>
+        </tr>
+        <!-- 댓글 목록 끝 -->
+        <!-- 댓글 입력 -->
+        <tr>
+            <td colspan="2" align="left">
+                작성자
+                <input type="text" name="writer" />
+                <br/>
+                <textarea rows="3" cols="80" name="comment" placeholder="댓글을 입력해 주세요."></textarea>
+                <input type="submit" value="등록" />
+            </td>
+        </tr>
+        <!-- 댓글 입력 끝 -->
+    </table>
+</form>
+<!-- 댓글 처리 끝 -->
+
+<hr>
+
+<button th:onclick="|location.href='@{/list(page=${condition.page}, selectedCategoryId=${condition.selectedCategoryId}, searchKeyword=${condition.searchKeyword}, startDate=${condition.getFromDate()}, endDate=${condition.getToDate()})}'|">목록</button>
+
+<div id="passwordConfirmModal" style="display:none; text-align:center;">
+    <table border="1" cellpadding="0" cellspacing="0" align="center">
+        <tr>
+            <td bgcolor="orange" width="70">비밀번호*</td>
+            <td align="left">
+                <input type="password" id="password" placeholder="비밀번호를 입력해 주세요." />
+            </td>
+        </tr>
+    </table>
+    <button th:onclick="'closeModal()'">취소</button>
+    <button id="checkButton" th:attr="data-board-id=${post.boardId}">확인</button>
+</div>
+<button id="modifyButton">수정</button>
+<button id="deleteButton">삭제</button>
+
+<script>
+    let lastClickedButton = null;   // 마지막으로 클릭된 버튼
+
+    // 이벤트 리스너 처리
+    document.addEventListener('DOMContentLoaded', function () {
+        // 수정 버튼
+        const modifyButton = document.getElementById('modifyButton');
+        if (modifyButton) {
+            modifyButton.addEventListener('click', function () {
+                openModal('modify');
+            });
+        }
+
+        // 삭제 버튼
+        const deleteButton = document.getElementById('deleteButton');
+        if (deleteButton) {
+            deleteButton.addEventListener('click', function () {
+                openModal('delete');
+            });
+        }
+
+        // 확인 버튼
+        const checkButton = document.getElementById('checkButton');
+        if (checkButton) {
+            checkButton.addEventListener('click', function () {
+                const boardId = this.getAttribute('data-board-id')
+                checkPassword(boardId);
+            });
+        }
+    });
+
+    // 비밀번호 확인 모달창 띄우기
+    function openModal(clickedButton) {
+        lastClickedButton = clickedButton;
+        document.getElementById('passwordConfirmModal').style.display = 'block';
+    }
+
+    // 모달창 닫기
+    function closeModal() {
+        document.getElementById('passwordConfirmModal').style.display = 'none';
+        document.getElementById('password').value = '';
+    }
+
+    // 리다이렉션 요청 파라미터 객체
+    const params = () => ({
+        page: document.getElementById('page').value,
+        category: document.getElementById('category').value,
+        searchKeyword: document.getElementById('searchKeyword').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value
+    });
+
+    // 비밀번호 확인
+    function checkPassword(boardId) {
+        const password = document.getElementById('password').value;
+
+        fetch('/check-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                boardId: boardId,
+                password: password
+            })
+        })
+        .then(response => {
+            switch (response.status) {
+                case 200: // 성공
+                    return response.status;
+                case 401:
+                    alert('비밀번호가 일치하지 않습니다.');
+                    break;
+                case 500:
+                    alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                    break;
+                default:
+                    alert('해당 요청을 처리할 수 없습니다.');
+            }
+        })
+        .then(data => {
+            if (data) {
+                const queryString = Object.entries(params())
+                    .map(([key, value]) => `${key}=${value}`).join('&');
+
+                if (lastClickedButton === 'modify') {
+                    modifyPost(boardId, queryString);
+                }
+                if (lastClickedButton === 'delete') {
+                    deletePost(boardId, queryString);
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // 게시글 수정 폼 이동
+    function modifyPost(boardId, queryString) {
+        window.location.href = `/modify?seq=${boardId}&${queryString}`;
+    }
+
+    // 게시글 삭제
+    function deletePost(boardId, queryString) {
+        if (confirm('게시글을 삭제하시겠습니까?')) {
+            fetch('/delete/' + boardId, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('게시글이 삭제되었습니다.');
+                    window.location.href = `/list?${queryString}`;
+                } else if (response.status === 500) {
+                    alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                    throw new Error('server error');
+                } else {
+                    alert('해당 요청을 처리할 수 없습니다.');
+                    throw new Error('unexpected error');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+</script>
+</body>
+</html>

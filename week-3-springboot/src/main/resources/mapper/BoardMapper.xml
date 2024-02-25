@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- MyBatis 매퍼 파일 정의. BoardMapper 인터페이스와 매핑 -->
+<mapper namespace="com.study.board.dao.BoardMapper">
+
+    <!-- 새 게시글을 생성하는 쿼리 -->
+    <insert id="write" keyProperty="boardId" useGeneratedKeys="true">
+        INSERT INTO tb_board
+            (category_id, title, content, writer, password)
+        VALUES
+            (#{categoryId}, #{title}, #{content}, #{writer}, SHA2(#{password}, 256))
+    </insert>
+
+    <!-- 게시글을 업데이트하는 쿼리 -->
+    <update id="modify">
+        UPDATE tb_board
+        SET
+            title = #{title}, content = #{content}, writer = #{writer}
+        WHERE board_id = #{boardId}
+    </update>
+
+    <!-- 게시글을 삭제하는 쿼리 -->
+    <delete id="delete">
+        DELETE FROM tb_board WHERE board_id = #{boardId}
+    </delete>
+
+    <!-- 특정 게시글의 비밀번호 해시를 가져오는 쿼리 -->
+    <select id="getPasswordById" resultType="string">
+        SELECT password FROM tb_board WHERE board_id = #{boardId}
+    </select>
+
+    <!-- 사용자가 입력한 비밀번호를 SHA-256으로 암호화하는 쿼리 -->
+    <select id="getPasswordHash" resultType="string">
+        SELECT SHA2(#{password}, 256)
+    </select>
+
+    <!-- 조건문 -->
+    <sql id="whereSql">
+        <if test="selectedCategoryId != -1">
+            AND board.category_id = #{selectedCategoryId}
+        </if>
+        <if test="searchKeyword != null and searchKeyword != ''">
+            AND (
+            title LIKE CONCAT('%', #{searchKeyword}, '%')
+            OR writer LIKE CONCAT('%', #{searchKeyword}, '%')
+            OR content LIKE CONCAT('%', #{searchKeyword}, '%')
+            )
+        </if>
+        AND board.created_at BETWEEN #{startDate} AND #{endDate}
+    </sql>
+
+    <!-- 조건에 맞는 게시글 수를 조회하는 쿼리 -->
+    <select id="getBoardCount" resultType="_int">
+        SELECT COUNT(*) FROM tb_board AS board
+        <where>
+            1=1
+            <include refid="whereSql" />
+        </where>
+    </select>
+
+    <!-- 조건에 맞는 게시글 리스트를 조회하는 쿼리 -->
+    <select id="getAllBoards" resultType="com.study.board.dto.BoardDTO">
+        SELECT board.*, category.name AS category_name
+        FROM tb_board board
+        LEFT JOIN tb_category category ON board.category_id = category.category_id
+        <where>
+            1=1
+            <include refid="whereSql" />
+        </where>
+        ORDER BY board.board_id DESC
+        LIMIT #{pageSize} OFFSET #{startIndex}
+    </select>
+
+    <!-- 특정 ID의 게시글 정보를 조회하는 쿼리 -->
+    <select id="getBoardById" resultType="com.study.board.dto.BoardDTO">
+        SELECT board.*, category.name AS category_name
+        FROM tb_board board
+                 LEFT JOIN tb_category category ON board.category_id = category.category_id
+        WHERE board.board_id = #{boardId}
+    </select>
+
+    <!-- 특정 게시글의 조회수를 1 증가시키는 쿼리 -->
+    <update id="increaseViewsCount" parameterType="_long">
+        UPDATE tb_board SET views = views + 1 WHERE board_id = #{boardId}
+    </update>
+
+</mapper>
