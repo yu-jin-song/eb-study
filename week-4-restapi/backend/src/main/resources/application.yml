@@ -1,0 +1,45 @@
+server:
+  port: 8081
+
+spring:
+  # DB
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:13306/board?serverTimezone=UTC&characterEncoding=utf8
+    username: joy
+    password: joy1234!
+  # Accept HTTP request except POST, GET
+  mvc:
+    hidden method:
+      filter:
+        enabled: true
+  # message
+  messages:
+    basename: massages,config.i18n.messages
+    encoding: utf-8
+  # reload and restart project
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+
+# mybatis
+mybatis:
+  config-location: classpath:mybatis-config.xml
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.study.board
+  configuration:
+    map-underscore-to-camel-case: true
+
+# file
+file:
+  upload:
+    base-path : D:/eBrainSoft
+    directory: upload
+
+# log
+logging:
+  level:
+    root: warn
+    com.study.board: debug
