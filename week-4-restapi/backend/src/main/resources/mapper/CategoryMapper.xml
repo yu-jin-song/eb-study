@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- MyBatis 매퍼 파일: CategoryMapper 인터페이스와 연결 -->
+<mapper namespace="com.study.board.dao.CategoryMapper">
+
+    <!-- 모든 카테고리 정보를 조회하는 쿼리. 결과는 CategoryDTO 객체 리스트로 매핑 -->
+    <select id="getAllCategories" resultType="com.study.board.dto.CategoryDTO">
+        SELECT * FROM tb_category ORDER BY category_id DESC;
+    </select>
+
+</mapper>
