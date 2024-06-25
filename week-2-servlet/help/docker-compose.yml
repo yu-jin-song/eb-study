@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: study-db
+    ports:
+      - 13306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: admin!
+      TZ: Asia/Seoul
+      MYSQL_DATABASE: board
+      MYSQL_USER: joy
+      MYSQL_PASSWORD: joy1234!
+    command:
+      - --character-set-server=UTF8MB4
+      - --collation-server=UTF8MB4_UNICODE_CI

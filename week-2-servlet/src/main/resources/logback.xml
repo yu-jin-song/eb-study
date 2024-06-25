@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss.SSS} %-5level --- [%thread] %logger[%method:%line] - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+<!--    &lt;!&ndash; level="info" , additivity="true" 로 변경 &ndash;&gt;-->
+<!--    <logger name="me.sickbbang.logging_test" level="info" additivity="false">-->
+<!--        <appender-ref ref="consoleAppender" />-->
+<!--    </logger>-->
+
+    <!-- level="error" 로 변경 -->
+<!--    <root level="error">-->
+    <root level="debug">
+        <appender-ref ref="consoleAppender" />
+    </root>
+
+</configuration>
