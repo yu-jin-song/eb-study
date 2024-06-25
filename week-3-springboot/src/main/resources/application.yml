@@ -1,0 +1,36 @@
+spring:
+  # DB
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:13306/board?serverTimezone=UTC&characterEncoding=utf8
+    username: joy
+    password: joy1234!
+  # POST, GET 이외의 HTTP 요청 활성화
+  mvc:
+    hidden method:
+      filter:
+        enabled: true
+  # thymeleaf
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+  # livereload & restart
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+
+# mybatis
+mybatis:
+  config-location: classpath:mybatis-config.xml
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.study.board
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    root: warn
+    com.study.board: debug

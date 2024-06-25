@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- MyBatis 설정 파일 -->
+<configuration>
+    <!-- 설정 옵션들 -->
+    <settings>
+        <!-- 데이터베이스의 underscore 스타일 컬럼 이름을 자바의 camelCase 스타일 필드 이름으로 자동 매핑하는 설정 -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+
+    <!-- 매퍼 파일들의 목록 -->
+    <mappers>
+        <!-- BoardMapper.xml 매퍼 파일: 게시판 관련 SQL 쿼리 -->
+        <mapper resource="mapper/BoardMapper.xml"/>
+        <!-- CategoryMapper.xml 매퍼 파일: 카테고리 관련 SQL 쿼리 -->
+        <mapper resource="mapper/CategoryMapper.xml"/>
+        <!-- CommentMapper.xml 매퍼 파일: 댓글 관련 SQL 쿼리 -->
+        <mapper resource="mapper/CommentMapper.xml"/>
+        <!-- FileMapper.xml 매퍼 파일: 파일 관련 SQL 쿼리 -->
+        <mapper resource="mapper/FileMapper.xml"/>
+    </mappers>
+</configuration>

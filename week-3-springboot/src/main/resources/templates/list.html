@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <link href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" rel="stylesheet">
+    <title>글 목록</title>
+</head>
+
+<body align="center">
+    <h1>자유 게시판 - 목록</h1>
+
+    <!--  검색 시작  -->
+    <form th:action="@{/boards}" method="get">
+        <input type="hidden" name="page" th:value="${condition.page}" />
+        <table border="1" cellpadding="0" cellspacing="0" width="700" align="center">
+            <tr>
+                <td align="left">
+                    등록일 : <input type="date" id="startDate" name="startDate" th:value="${condition.getFromDate()}" /> ~ <input type="date" id="endDate" name="endDate" th:value="${condition.getToDate()}" />
+                </td>
+                <td align="right">
+                    <select name="selectedCategoryId">
+                        <option th:value="''" th:selected="${condition.selectedCategoryId == -1}">전체 카테고리</option>
+                        <th:block th:each="category : ${categories}">
+                            <option th:value="${category.categoryId}" th:selected="${category.categoryId == condition.selectedCategoryId}" th:text="${category.name}" />
+                        </th:block>
+                    </select>
+                    <input type="text" name="searchKeyword" placeholder="검색어를 입력해 주세요. (제목 + 작성자 + 내용)" th:value="${condition.searchKeyword}"/>
+                    <input type="submit" value="검색" />
+                </td>
+            </tr>
+        </table>
+    </form>
+    <!--  검색 종료  -->
+
+    <br>
+
+    <!--  게시글 전체 갯수  -->
+    <p style="text-align: left; padding-left: 250px" th:text="'총 ' + ${pagination.totalPostCount} + ' 건'">총 <%= totalCnt %>건</p>
+
+    <!--  게시글 목록  -->
+    <table border="1" cellpadding="0" cellspacing="0" width="700" align="center">
+        <thead>
+            <tr>
+                <th bgcolor="orange" width="100">카테고리</th>
+                <th bgcolor="orange" width="100">제목</th>
+                <th bgcolor="orange" width="100">작성자</th>
+                <th bgcolor="orange" width="100">조회수</th>
+                <th bgcolor="orange" width="100">등록 일시</th>
+                <th bgcolor="orange" width="100">수정 일시</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="post : ${posts}">
+                <td th:text="${post.categoryName}"></td>
+                <td style="text-align: left">
+                    <span th:if="${post.hasFiles}">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </span>
+                    <a th:href="@{/view/{seq}(
+                        seq = ${post.boardId},
+                        page = ${condition.page},
+                        selectedCategoryId = ${condition.selectedCategoryId},
+                        searchKeyword = ${condition.searchKeyword},
+                        startDate = ${condition.getFromDate()},
+                        endDate = ${condition.getToDate()}
+                    )}" th:text="${post.title}"></a>
+                </td>
+                <td th:text="${post.writer}"></td>
+                <td th:text="${post.views}"></td>
+                <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <!-- 수정 이력이 없을 경우 '-'로 표기 -->
+                <td th:text="${post.createdAt.equals(post.modifiedAt) ?
+                    '-' : #temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm')}"></td>
+            </tr>
+        </tbody>
+    </table>
+    <!--  게시글 목록 끝  -->
+
+    <br><br>
+
+    <!-- TODO : 따로 분리할 것  -->
+    <!-- 페이징 처리 시작 -->
+    <div align="center">
+        <ul class="pagination" style="list-style: none; display: table; margin: 0 auto; padding-left: 0;">
+            <!-- 처음 페이지로 이동 -->
+            <li th:if="${pagination.block > 1}" style="display: inline;">
+                <a th:href="@{/list(
+                    page = 1,
+                    selectedCategoryId = ${condition.selectedCategoryId},
+                    searchKeyword = ${condition.searchKeyword},
+                    startDate = ${condition.getFromDate()},
+                    endDate = ${condition.getToDate()})}"><<</a>
+            </li>
+            <!-- 이전 블록으로 이동 -->
+            <li th:if="${pagination.block > 1}" style="display: inline;">
+                <a th:href="@{/list(
+                    page = ${pagination.prevBlock},
+                    selectedCategoryId = ${condition.selectedCategoryId},
+                    searchKeyword = ${condition.searchKeyword},
+                    startDate = ${condition.getFromDate()},
+                    endDate = ${condition.getToDate()})}"> <</a>
+            </li>
+            <!-- 페이지 번호 -->
+            <li th:each="pageButton : ${#numbers.sequence(pagination.startPage, pagination.endPage)}"
+                th:class="${pageButton == pagination.page ? 'active' : ''}"
+                style="display: inline;">
+                <a th:if="${pageButton != pagination.page}"
+                   th:href="@{/list(
+                    page = ${pageButton},
+                    selectedCategoryId = ${condition.selectedCategoryId},
+                    searchKeyword = ${condition.searchKeyword},
+                    startDate = ${condition.getFromDate()},
+                    endDate = ${condition.getToDate()})}"
+                   th:text="${pageButton}"></a>
+                <span th:if="${pageButton == pagination.page}" th:text="${pageButton}" style="color: black; font-weight: bold;"></span>
+            </li>
+            <!-- 다음 블록으로 이동 -->
+            <li th:if="${pagination.block < pagination.totalBlockCount}" style="display: inline;">
+                <a th:href="@{/list(
+                    page = ${pagination.nextBlock},
+                    selectedCategoryId = ${condition.selectedCategoryId},
+                    searchKeyword = ${condition.searchKeyword},
+                    startDate = ${condition.getFromDate()},
+                    endDate = ${condition.getToDate()})}">></a>
+            </li>
+            <!-- 마지막 페이지로 이동 -->
+            <li th:if="${pagination.block < pagination.totalBlockCount}" style="display: inline;">
+                <a th:href="@{/list(
+                    page = ${pagination.totalPageCount},
+                    selectedCategoryId = ${condition.selectedCategoryId},
+                    searchKeyword = ${condition.searchKeyword},
+                    startDate = ${condition.getFromDate()},
+                    endDate = ${condition.getToDate()})}"> >></a>
+            </li>
+        </ul>
+    </div>
+    <!-- 페이징 처리 끝 -->
+
+    <br><br>
+
+    <button type="button" th:onclick="|location.href='@{/write(page=${condition.page}, selectedCategoryId=${condition.selectedCategoryId}, searchKeyword=${condition.searchKeyword}, startDate=${condition.getFromDate()}, endDate=${condition.getToDate()})}'|">등록</button>
+
+    <script type="text/javascript">
+        // 검색 날짜 셋팅(등록일 기준)
+        const currentDate = new Date(); // 현재 날짜
+
+        // 시작 및 종료 일자가 이미 설정되어 있지 않은 경우에만 기본값 적용
+        const startDateInput = document.getElementById('startDate');
+        if (!startDateInput.value) {
+            const startDate = new Date(currentDate.getTime());
+            startDate.setFullYear(startDate.getFullYear() - 1); // 1년 전으로 설정
+            startDateInput.value = startDate.toISOString().substring(0, 10); // YYYY-MM-DD 형식
+        }
+
+        const endDateInput = document.getElementById('endDate');
+        if (!endDateInput.value) {
+            endDateInput.value = currentDate.toISOString().substring(0, 10);
+        }
+    </script>
+</body>
+</html>

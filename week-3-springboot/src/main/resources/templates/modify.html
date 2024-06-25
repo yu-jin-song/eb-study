@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <title>글 수정</title>
+</head>
+
+<body align="center">
+<h1>게시판 - 수정</h1>
+
+<hr>
+
+<!--  게시글 수정  -->
+<form name="modifyForm" th:action="@{/modify}" th:object="${post}" method="#" th:method="put" enctype="multipart/form-data">
+    <input type="hidden" th:field="*{boardId}" />
+    <input type="hidden" id="page" name="page" th:value="${condition.page}" />
+    <input type="hidden" id="category" name="category" th:value="${condition.selectedCategoryId}" />
+    <input type="hidden" id="searchKeyword" name="searchKeyword" th:value="${condition.searchKeyword}" />
+    <input type="hidden" id="startDate" name="startDate" th:value="${condition.getFromDate()}" />
+    <input type="hidden" id="endDate" name="endDate" th:value="${condition.getToDate()}" />
+
+    <table border="1" cellpadding="0" cellspacing="0" align="center">
+        <tr>
+            <td bgcolor="orange" width="70">카테고리*</td>
+            <td align="left" th:text="${post.categoryName}"></td>
+        </tr>
+        <tr>
+            <td bgcolor="orange" width="70">등록 일시</td>
+            <td align="left" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+        </tr>
+        <tr>
+            <td bgcolor="orange" width="70">수정 일시</td>
+            <td align="left" th:text="${#temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm')}"></td>
+        </tr>
+        <tr>
+            <td bgcolor="orange" width="70">조회수</td>
+            <td align="left" th:text="${post.views}"></td>
+        </tr>
+        <tr>
+            <td bgcolor="orange" width="70">작성자*</td>
+            <td align="left">
+                <input type="text" th:field="*{writer}" required />
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="orange" width="70">비밀번호</td>
+            <td align="left">
+                <input type="password" id="password" name="password" placeholder="비밀번호" maxlength="16" required/>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="orange" width="70">제목*</td>
+            <td align="left">
+                <input type="text" th:field="*{title}" required/>
+            </td>
+        </tr>
+        <tr>
+            <td bgcolor="orange">내용*</td>
+            <td align="left">
+                <textarea rows="10" cols="40" th:field="*{content}" required></textarea>
+            </td>
+        </tr>
+        <tr th:each="file,status : ${files}">
+            <td align="left" th:id="'file' + ${status.index}">
+                <input type="hidden" th:id="'fileName' + ${status.index}" th:name="'existedFileName'" th:value="${file.originalName}" />
+                <span th:text="|${file.originalName}.${file.ext}|"></span>
+                <button type="button" th:onclick="|location.href='@{/file(fileName=${file.savedName}, filePath=${file.savedPath}, ext=${file.ext})}'|">Download</button>
+                <button type="button" th:onclick="|deleteFile(${status.index});|">Delete</button>
+            </td>
+        </tr>
+        <tr th:each="index : ${#numbers.sequence(0, 2 - files.size())}">
+            <td align="left" th:id="'file' + ${index}">
+                <input type="file" name="uploadFile"/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" align="center">
+                <button type="button" th:onclick="|location.href='@{/view/{seq}(seq=*{boardId}, page=${condition.page}, selectedCategoryId=${condition.selectedCategoryId}, searchKeyword=${condition.searchKeyword}, startDate=${condition.getFromDate()}, endDate=${condition.getToDate()})}'|">취소</button>
+                <button id="saveButton">저장</button>
+            </td>
+        </tr>
+    </table>
+</form>
+<!--  게시글 수정 끝  -->
+
+<script>
+    // 파일 삭제
+    function deleteFile(fileId) {
+        // file name hidden input 삭제
+        const fileNameInput = document.getElementById("fileName" + fileId);
+        if (fileNameInput) {
+            fileNameInput.parentNode.removeChild(fileNameInput);
+        }
+
+        // 파일 삭제하고, 해당 파일을 업로드할 수 있는 입력 필드로 대체
+        const file = document.getElementById("file" + fileId);
+        if (file) {
+            // 기존 파일 선택 입력 필드를 삭제하는 대신 Download 및 Delete 버튼을 제거하고 파일 선택 입력 필드를 유지
+            file.innerHTML = '<input type="file" name="uploadFile" />'; // 파일 선택 입력 필드를 유지
+        }
+    }
+
+    // 유효성 검사 이벤트 핸들러
+    document.addEventListener("DOMContentLoaded", function() {
+        // 작성 폼 필드 검사
+        const form = document.forms["modifyForm"];
+        const fields = {
+            writer: {
+                maxLength: 4,
+                validator: value => value.length >= 3 && value.length < 5,
+                message: "작성자는 3글자 이상, 5글자 미만이어야 합니다."
+            },
+            password: {
+                maxLength: 15,
+                validator: value => /^(?!.*\s)(?=.*[a-zA-Z])(?=.*\d)(?=.*[\W_]).{4,15}$/.test(value),
+                message: "비밀번호는 4글자 이상, 16글자 미만이며, 영문, 숫자, 특수문자를 포함해야 합니다."
+            },
+            title: {
+                maxLength: 99,
+                validator: value => value.length >= 4 && value.length < 100,
+                message: "제목은 4글자 이상, 100글자 미만이어야 합니다."
+            },
+            content: {
+                maxLength: 1999,
+                validator: value => value.length >= 4 && value.length < 2000,
+                message: "내용은 4글자 이상, 2000글자 미만이어야 합니다."
+            }
+        }
+
+        // 각 필드에 대한 blur 이벤트 리스너 설정
+        Object.keys(fields).forEach(field => {
+            form[field].addEventListener("blur", () => handleValidation(field, fields[field]));
+        });
+
+        // 각 필드별 마지막으로 검증에 실패한 값을 저장할 객체
+        const lastFailedValues = {};
+
+        // 유효성 검증 처리 메서드
+        function handleValidation(field, {validator, maxLength, message}) {
+            const input = form[field];
+            const value = input.value;
+            const isValid = validator(value);
+
+            // 이전에 실패한 값과 동일한 경우 경고를 다시 표시하지 않음
+            if (!isValid && lastFailedValues[field] !== value) {
+                alert(message);
+                lastFailedValues[field] = value; // 마지막으로 검증에 실패한 값 업데이트
+
+                if (value.length > maxLength) {
+                    input.value = value.substring(0, maxLength);  // 범위를 초과할 경우 최대 길이에 맞게 조정
+                }
+                input.focus();
+
+                input.classList.remove("valid"); // 유효하지 않으므로 valid 클래스 제거
+            } else if (isValid) {
+                lastFailedValues[field] = null; // 유효성 검사를 통과하면 해당 필드의 마지막 실패 값을 초기화
+                input.classList.add("valid"); // 유효성 검증을 통과했으므로 valid 클래스 추가
+            } else {
+                input.classList.remove("valid"); // 그 외 상황에서는 valid 클래스 제거
+            }
+        }
+
+
+        // 모든 필드 유효성 검사
+        const saveButton = document.getElementById("saveButton");
+        saveButton.addEventListener("click", function() {
+            if (validateAllFields()) {
+                form.submit(); // 모든 유효성 검증이 통과되면 폼 제출
+            } else {
+                alert("양식을 올바르게 채워주세요.");
+            }
+        });
+
+        function validateAllFields() {
+            let allValid = true;
+            Object.keys(fields).forEach(field => {
+                const {validator, message} = fields[field];
+                const input = form[field];
+                const isValid = validator(input.value);
+
+                if (!isValid) {
+                    alert(message);
+                    input.focus();
+                    allValid = false;
+                    return false; // 유효성 검사 실패 시, 반복 중단
+                }
+            });
+            return allValid;
+        }
+    });
+</script>
+</body>
+</html>
